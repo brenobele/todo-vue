@@ -11,6 +11,8 @@ const { todos, loading, error, fetchTodos, createTodo, toggleTodo, deleteTodo } 
 const newTitle = ref('')
 const createError = ref('')
 const creating = ref(false)
+const toggleError = ref('')
+const deletingId = ref<number | null>(null)
 
 onMounted(fetchTodos)
 
@@ -29,6 +31,28 @@ async function handleCreate() {
     createError.value = err.response?.data?.message ?? 'Erro ao criar tarefa.'
   } finally {
     creating.value = false
+  }
+}
+
+async function handleToggle(id: number, completed: boolean) {
+  if (deletingId.value !== null) return
+  toggleError.value = ''
+  try {
+    await toggleTodo(id, completed)
+  } catch (err: any) {
+    toggleError.value = err.response?.data?.message ?? 'Erro ao atualizar tarefa.'
+  }
+}
+
+async function handleDelete(id: number) {
+  if (deletingId.value !== null) return
+  deletingId.value = id
+  try {
+    await deleteTodo(id)
+  } catch (err: any) {
+    createError.value = err.response?.data?.message ?? 'Erro ao excluir tarefa.'
+  } finally {
+    deletingId.value = null
   }
 }
 
@@ -71,17 +95,19 @@ async function handleLogout() {
             <input
               type="checkbox"
               :checked="todo.completed"
-              @change="toggleTodo(todo.id, !todo.completed)"
+              @change="handleToggle(todo.id, !todo.completed)"
             />
             <span :class="{ completed: todo.completed }">{{ todo.title }}</span>
           </label>
-          <button class="btn-delete" @click="deleteTodo(todo.id)" aria-label="Excluir tarefa">
+          <button class="btn-delete" @click="handleDelete(todo.id)" :disabled="deletingId === todo.id" aria-label="Excluir tarefa">
             ×
           </button>
         </li>
       </ul>
 
       <div v-else class="state-message">Nenhuma tarefa ainda. Adicione uma acima!</div>
+
+      <span v-if="toggleError" class="error" style="text-align: center">{{ toggleError }}</span>
     </div>
   </div>
 </template>

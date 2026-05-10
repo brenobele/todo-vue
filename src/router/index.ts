@@ -20,6 +20,7 @@ const router = createRouter({
       component: () => import('@/views/TodosView.vue'),
       meta: { requiresAuth: true },
     },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })
 
