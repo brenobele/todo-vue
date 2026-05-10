@@ -20,8 +20,8 @@ export function useTodos() {
     }
   }
 
-  async function createTodo(title: string) {
-    const { data } = await api.post<Todo>('/todos', { title })
+  async function createTodo(title: string, dueDate?: string | null) {
+    const { data } = await api.post<Todo>('/todos', { title, dueDate: dueDate || null })
     todos.value.push(data)
   }
 

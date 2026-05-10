@@ -9,10 +9,21 @@ const router = useRouter()
 const { todos, loading, error, fetchTodos, createTodo, toggleTodo, deleteTodo } = useTodos()
 
 const newTitle = ref('')
+const newDueDate = ref('')
 const createError = ref('')
 const creating = ref(false)
 const toggleError = ref('')
 const deletingId = ref<number | null>(null)
+
+function formatDueDate(dueDate: string): string {
+  const [year, month, day] = dueDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+function isOverdue(todo: { completed: boolean; dueDate: string | null }): boolean {
+  if (!todo.dueDate || todo.completed) return false
+  return todo.dueDate < new Date().toISOString().split('T')[0]
+}
 
 onMounted(fetchTodos)
 
@@ -25,8 +36,9 @@ async function handleCreate() {
   creating.value = true
   createError.value = ''
   try {
-    await createTodo(title)
+    await createTodo(title, newDueDate.value || null)
     newTitle.value = ''
+    newDueDate.value = ''
   } catch (err: any) {
     createError.value = err.response?.data?.message ?? 'Erro ao criar tarefa.'
   } finally {
@@ -85,6 +97,16 @@ async function handleLogout() {
             {{ creating ? '...' : 'Adicionar' }}
           </button>
         </div>
+        <div class="due-date-row">
+          <label class="due-date-label" for="newDueDate">Prazo</label>
+          <input
+            id="newDueDate"
+            v-model="newDueDate"
+            type="date"
+            class="due-date-input"
+            :disabled="creating"
+          />
+        </div>
         <span v-if="createError" class="error">{{ createError }}</span>
       </form>
 
@@ -93,16 +115,35 @@ async function handleLogout() {
       <div v-else-if="error" class="state-message error">{{ error }}</div>
 
       <ul v-else-if="todos.length > 0" class="todo-list">
-        <li v-for="todo in todos" :key="todo.id" class="todo-item">
+        <li
+          v-for="todo in todos"
+          :key="todo.id"
+          class="todo-item"
+          :class="{ 'todo-overdue': isOverdue(todo) }"
+        >
           <label class="todo-label">
             <input
               type="checkbox"
               :checked="todo.completed"
               @change="handleToggle(todo.id, !todo.completed)"
             />
-            <span :class="{ completed: todo.completed }">{{ todo.title }}</span>
+            <div class="todo-text">
+              <span :class="{ completed: todo.completed }">{{ todo.title }}</span>
+              <span
+                v-if="todo.dueDate"
+                class="due-badge"
+                :class="{ 'due-badge--overdue': isOverdue(todo), 'due-badge--done': todo.completed }"
+              >
+                Prazo: {{ formatDueDate(todo.dueDate) }}
+              </span>
+            </div>
           </label>
-          <button class="btn-delete" @click="handleDelete(todo.id)" :disabled="deletingId === todo.id" aria-label="Excluir tarefa">
+          <button
+            class="btn-delete"
+            @click="handleDelete(todo.id)"
+            :disabled="deletingId === todo.id"
+            aria-label="Excluir tarefa"
+          >
             ×
           </button>
         </li>
@@ -179,6 +220,9 @@ h1 {
 
 .add-form {
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .add-input-wrapper {
@@ -200,6 +244,39 @@ h1 {
 
 .add-input-wrapper input:focus {
   border-color: hsla(160, 100%, 37%, 1);
+}
+
+.due-date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.due-date-label {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.due-date-input {
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background-soft);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.due-date-input:focus {
+  border-color: hsla(160, 100%, 37%, 1);
+}
+
+.due-date-input:disabled {
+  opacity: 0.6;
 }
 
 .btn-add {
@@ -263,6 +340,10 @@ h1 {
   border-color: hsla(160, 100%, 37%, 0.4);
 }
 
+.todo-item.todo-overdue {
+  border-color: hsla(0, 80%, 60%, 0.4);
+}
+
 .todo-label {
   display: flex;
   align-items: center;
@@ -275,18 +356,42 @@ h1 {
   width: 1rem;
   height: 1rem;
   cursor: pointer;
+  flex-shrink: 0;
   accent-color: hsla(160, 100%, 37%, 1);
 }
 
-.todo-label span {
+.todo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.todo-text span {
   font-size: 0.95rem;
   color: var(--color-text);
   transition: opacity 0.2s;
 }
 
-.todo-label span.completed {
+.todo-text span.completed {
   text-decoration: line-through;
   opacity: 0.45;
+}
+
+.due-badge {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.55;
+}
+
+.due-badge--overdue {
+  color: #e53e3e;
+  opacity: 1;
+  font-weight: 500;
+}
+
+.due-badge--done {
+  text-decoration: line-through;
+  opacity: 0.35;
 }
 
 .btn-delete {

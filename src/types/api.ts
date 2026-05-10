@@ -4,6 +4,7 @@ export interface Todo {
   completed: boolean
   userId: string
   createdAt: string
+  dueDate: string | null
 }
 
 export interface TodosResponse {
