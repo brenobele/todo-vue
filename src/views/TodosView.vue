@@ -22,7 +22,13 @@ function formatDueDate(dueDate: string): string {
 
 function isOverdue(todo: { completed: boolean; dueDate: string | null }): boolean {
   if (!todo.dueDate || todo.completed) return false
-  return todo.dueDate < new Date().toISOString().split('T')[0]
+  const today = new Date()
+  const localDate = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
+  return todo.dueDate < localDate
 }
 
 onMounted(fetchTodos)
