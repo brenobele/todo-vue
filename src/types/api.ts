@@ -20,6 +20,12 @@ export interface RegisterResponse {
   userId: string
 }
 
+export interface UserProfile {
+  id: string
+  name: string
+  email: string
+}
+
 export interface ApiError {
   message: string
 }

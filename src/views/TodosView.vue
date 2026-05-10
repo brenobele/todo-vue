@@ -67,7 +67,10 @@ async function handleLogout() {
     <div class="container">
       <header class="header">
         <h1>Minhas Tarefas</h1>
-        <button class="btn-logout" @click="handleLogout">Sair</button>
+        <div class="header-actions">
+          <RouterLink to="/profile" class="btn-profile">Perfil</RouterLink>
+          <button class="btn-logout" @click="handleLogout">Sair</button>
+        </div>
       </header>
 
       <form class="add-form" @submit.prevent="handleCreate">
@@ -136,6 +139,27 @@ h1 {
   font-weight: 700;
   color: var(--color-heading);
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-profile {
+  padding: 0.4rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-profile:hover {
+  background: var(--color-background-soft);
 }
 
 .btn-logout {
